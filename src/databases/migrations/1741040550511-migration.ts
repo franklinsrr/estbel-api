@@ -4,6 +4,14 @@ export class Migration1741040550511 implements MigrationInterface {
   name = 'Migration1741040550511';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Create ENUMs first
+    await queryRunner.query(
+      `CREATE TYPE "public"."members_gender_enum" AS ENUM('female', 'male')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."members_civilstatus_enum" AS ENUM('married', 'single', 'widower', 'divorced')`,
+    );
+
     await queryRunner.query(
       `CREATE TABLE "group_types" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" text NOT NULL, "description" text NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_85094e79a5443171e2e9d401acd" PRIMARY KEY ("id"))`,
     );
@@ -153,5 +161,9 @@ export class Migration1741040550511 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "members_status"`);
     await queryRunner.query(`DROP TABLE "groups"`);
     await queryRunner.query(`DROP TABLE "group_types"`);
+
+    // Drop ENUMs at the end
+    await queryRunner.query(`DROP TYPE "public"."members_civilstatus_enum"`);
+    await queryRunner.query(`DROP TYPE "public"."members_gender_enum"`);
   }
 }
