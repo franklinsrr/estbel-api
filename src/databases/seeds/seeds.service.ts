@@ -5,6 +5,7 @@ import { GROUPS } from './mock/groups';
 import { MEMBERS_STATUS } from './mock/member-types';
 import { MEMBERS } from './mock/members';
 import { MODULES } from './mock/modules';
+import { ADMINS } from './mock/admins';
 
 @Injectable()
 export class SeedsService {
@@ -52,6 +53,35 @@ export class SeedsService {
       await queryRunner.manager.save('members', membersWithStatus);
 
       await queryRunner.manager.save('modules', MODULES);
+
+      // Create admins with their accesses
+      for (const adminData of ADMINS) {
+        const { accesses, member, ...adminFields } = adminData;
+
+        // Find the member by ID
+        const memberEntity = await queryRunner.manager.findOne('members', {
+          where: { id: member.id },
+        });
+
+        // Create admin
+        const admin = await queryRunner.manager.save('admins', {
+          ...adminFields,
+          member: memberEntity,
+        });
+
+        // Create accesses for the admin
+        for (const accessData of accesses) {
+          const module = await queryRunner.manager.findOne('modules', {
+            where: { name: accessData.moduleName },
+          });
+
+          await queryRunner.manager.save('access', {
+            ...accessData,
+            admin: admin,
+            module: module,
+          });
+        }
+      }
 
       await queryRunner.commitTransaction();
       this.logger.log('Seeds executed successfully');
