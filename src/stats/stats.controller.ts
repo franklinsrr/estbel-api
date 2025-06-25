@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { StatsService } from './stats.service';
 import { Authorization } from '@common/guards/Authorization.guard';
 import { MODULES } from '@shared/enums/modules';
