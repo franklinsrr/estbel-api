@@ -4,7 +4,7 @@ export const ADMINS = [
   {
     id: 'franklin-rodriguez-admin-001',
     email: 'franklinserif@gmail.com',
-    password: '$2b$10$YourHashedPasswordHere', // This would be hashed in real implementation
+    password: '$2b$10$L/LFebMYfUrknCpW2RQXie0AG052lh8UwpN9MwRzt9Zq8I/Hf8/jG', // Hash of 'IwaCDZJ(XYUFaN?CQIxR123'
     member: {
       id: 'franklin-rodriguez-2024-001', // Reference to the member we created
     },
