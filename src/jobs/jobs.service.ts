@@ -129,7 +129,9 @@ export class JobsService {
     if (repeat) {
       return `${seconds} ${minutes} ${hours} * * ${dayOfWeek}`;
     } else {
-      return `${seconds} ${minutes} ${hours} ${time.getDate()} ${time.getMonth() + 1} *`;
+      return `${seconds} ${minutes} ${hours} ${time.getDate()} ${
+        time.getMonth() + 1
+      } *`;
     }
   }
 }
