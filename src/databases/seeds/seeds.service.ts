@@ -126,16 +126,18 @@ export class SeedsService {
    * @returns {Promise<void>}
    */
   private async clearDatabase(queryRunner: any): Promise<void> {
-    await queryRunner.query('DELETE FROM "events"');
+    // Delete in order that respects foreign key constraints
+    // First delete records that reference other tables
     await queryRunner.query('DELETE FROM "attendances"');
+    await queryRunner.query('DELETE FROM "events"');
     await queryRunner.query('DELETE FROM "access"');
-    await queryRunner.query('DELETE FROM "modules"');
-    await queryRunner.query('DELETE FROM "members_status"');
-    await queryRunner.query('DELETE FROM "groups"');
-    await queryRunner.query('DELETE FROM "group_types"');
-    await queryRunner.query('DELETE FROM "members"');
-    await queryRunner.query('DELETE FROM "admins"');
     await queryRunner.query('DELETE FROM "members_groups_groups"');
     await queryRunner.query('DELETE FROM "member_parents"');
+    await queryRunner.query('DELETE FROM "admins"');
+    await queryRunner.query('DELETE FROM "members"');
+    await queryRunner.query('DELETE FROM "groups"');
+    await queryRunner.query('DELETE FROM "group_types"');
+    await queryRunner.query('DELETE FROM "members_status"');
+    await queryRunner.query('DELETE FROM "modules"');
   }
 }
