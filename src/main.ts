@@ -21,7 +21,12 @@ async function bootstrap() {
     max: 100,
   });
   app.use(limiter);
-  app.use(cors());
+  app.use(
+    cors({
+      origin: '*',
+      credentials: true,
+    }),
+  );
 
   //app.useGlobalInterceptors(new SentryInterceptor());
   app.useGlobalFilters(new GlobalErrorFilter());
