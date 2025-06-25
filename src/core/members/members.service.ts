@@ -7,6 +7,7 @@ import { Member } from '@members/entities/member.entity';
 import { CivilStatus } from '@members/enum/options';
 import { CreateMemberDto } from '@members/dto/create-member.dto';
 import { UpdateMemberDto } from '@members/dto/update-member.dto';
+import { CURRENT_DAY, CURRENT_MONTH } from '@shared/constants/birthday';
 
 @Injectable()
 export class MembersService {
@@ -27,8 +28,9 @@ export class MembersService {
 
     const member = this.memberRepository.create(memberData);
 
-    member.memberStatus =
-      await this.memberStatusService.findOne(memberStatusId);
+    member.memberStatus = await this.memberStatusService.findOne(
+      memberStatusId,
+    );
 
     if (spouseId) {
       member.spouse = await this.findMember(spouseId, 'Spouse');
@@ -72,6 +74,109 @@ export class MembersService {
   }
 
   /**
+   * Get all members with birthday on a specific date
+   * @param month - Month number (1-12). If not provided, uses current month
+   * @param day - Day number (1-31). If not provided, uses current day
+   * @returns Array of members with birthday on the specified date
+   */
+  async getBirthdayMembers(month?: number, day?: number) {
+    const targetMonth = month || parseInt(CURRENT_MONTH);
+    const targetDay = day || parseInt(CURRENT_DAY);
+
+    const members = await this.memberRepository
+      .createQueryBuilder('member')
+      .where(
+        `EXTRACT(MONTH FROM member.birthdate::date) = :month AND EXTRACT(DAY FROM member.birthdate::date) = :day`,
+        {
+          month: targetMonth,
+          day: targetDay,
+        },
+      )
+      .orderBy('member.birthdate', 'ASC')
+      .getMany();
+
+    return members;
+  }
+
+  /**
+   * Debug method to check how dates are stored in database
+   * @returns Debug information about dates
+   */
+  async debugBirthDates() {
+    // Buscar específicamente los miembros que deberían tener fecha 25 de junio
+    const june25Members = await this.memberRepository
+      .createQueryBuilder('member')
+      .select([
+        'member.id',
+        'member.firstName',
+        'member.lastName',
+        'member.birthdate',
+      ])
+      .where(`member.birthdate::text LIKE '%25%'`)
+      .getMany();
+
+    // Buscar miembros con nombres específicos que sabemos que deberían tener fecha 25 de junio
+    const specificMembers = await this.memberRepository
+      .createQueryBuilder('member')
+      .select([
+        'member.id',
+        'member.firstName',
+        'member.lastName',
+        'member.birthdate',
+      ])
+      .where(`member.firstName IN ('Roberto', 'Fernando', 'Andrés')`)
+      .getMany();
+
+    // Buscar todos los miembros que contienen "25" en su fecha
+    const allMembers = await this.memberRepository
+      .createQueryBuilder('member')
+      .select([
+        'member.id',
+        'member.firstName',
+        'member.lastName',
+        'member.birthdate',
+      ])
+      .where('member.birthdate IS NOT NULL')
+      .limit(50)
+      .getMany();
+
+    const debugInfo = {
+      currentDate: new Date(),
+      currentMonth: parseInt(CURRENT_MONTH),
+      currentDay: parseInt(CURRENT_DAY),
+      june25Members: june25Members.map((member) => ({
+        name: `${member.firstName} ${member.lastName}`,
+        birthdate: member.birthdate,
+        parsed: member.birthdate ? new Date(member.birthdate) : null,
+        month: member.birthdate
+          ? new Date(member.birthdate).getMonth() + 1
+          : null,
+        day: member.birthdate ? new Date(member.birthdate).getDate() : null,
+      })),
+      specificMembers: specificMembers.map((member) => ({
+        name: `${member.firstName} ${member.lastName}`,
+        birthdate: member.birthdate,
+        parsed: member.birthdate ? new Date(member.birthdate) : null,
+        month: member.birthdate
+          ? new Date(member.birthdate).getMonth() + 1
+          : null,
+        day: member.birthdate ? new Date(member.birthdate).getDate() : null,
+      })),
+      totalMembers: allMembers.length,
+      allDates: allMembers.map((member) => ({
+        name: `${member.firstName} ${member.lastName}`,
+        birthdate: member.birthdate,
+        month: member.birthdate
+          ? new Date(member.birthdate).getMonth() + 1
+          : null,
+        day: member.birthdate ? new Date(member.birthdate).getDate() : null,
+      })),
+    };
+
+    return debugInfo;
+  }
+
+  /**
    * Updates an existing module by its ID
    * @param {string} id - The ID of the member to update
    * @param {UpdateMemberDto} updateMemberDto - the data transfer object for update a member.
@@ -87,8 +192,9 @@ export class MembersService {
     Object.assign(member, memberData);
 
     if (memberStatusId) {
-      member.memberStatus =
-        await this.memberStatusService.findOne(memberStatusId);
+      member.memberStatus = await this.memberStatusService.findOne(
+        memberStatusId,
+      );
     }
 
     if (spouseId) {
