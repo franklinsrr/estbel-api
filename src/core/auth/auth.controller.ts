@@ -9,13 +9,13 @@ import {
   Patch,
   Request,
 } from '@nestjs/common';
-import { JwtGuard } from '@common/guards/jwt.guard';
 import { AuthService } from '@auth/auth.service';
 import { LoginDto } from '@auth/dtos/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { ENV_VAR } from '@configuration/enum/env';
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password';
+import { JwtRefreshGuard } from '@common/guards/jwtRefresh.Guard';
 
 @Controller('auth')
 export class AuthController {
@@ -40,6 +40,13 @@ export class AuthController {
     res.json({ accessToken });
   }
 
+  @Post('logout')
+  async logout(@Res() res: Response) {
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Logged out successfully' });
+    return { message: 'Logged out successfully' };
+  }
+
   @Patch('change-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     return this.authService.changePassword(changePasswordDto);
@@ -50,8 +57,8 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
-  @UseGuards(JwtGuard)
-  @Patch('refresh-tokens')
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh-token')
   refreshTokens(@Request() req, @Body() body: { accessToken: string }) {
     const { refreshToken } = req.cookies;
     return this.authService.refreshTokens(body.accessToken, refreshToken);
