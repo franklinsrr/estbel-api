@@ -28,8 +28,9 @@ export class MembersService {
 
     const member = this.memberRepository.create(memberData);
 
-    member.memberStatus =
-      await this.memberStatusService.findOne(memberStatusId);
+    member.memberStatus = await this.memberStatusService.findOne(
+      memberStatusId,
+    );
 
     if (spouseId) {
       member.spouse = await this.findMember(spouseId, 'Spouse');
@@ -84,6 +85,7 @@ export class MembersService {
 
     const members = await this.memberRepository
       .createQueryBuilder('member')
+      .innerJoinAndSelect('member.memberStatus', 'memberStatus')
       .where(
         `EXTRACT(MONTH FROM member.birthdate::date) = :month AND EXTRACT(DAY FROM member.birthdate::date) = :day`,
         {
@@ -93,7 +95,6 @@ export class MembersService {
       )
       .orderBy('member.birthdate', 'ASC')
       .getMany();
-
     return members;
   }
 
@@ -113,8 +114,9 @@ export class MembersService {
     Object.assign(member, memberData);
 
     if (memberStatusId) {
-      member.memberStatus =
-        await this.memberStatusService.findOne(memberStatusId);
+      member.memberStatus = await this.memberStatusService.findOne(
+        memberStatusId,
+      );
     }
 
     if (spouseId) {
