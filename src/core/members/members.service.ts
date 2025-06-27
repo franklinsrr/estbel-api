@@ -28,9 +28,8 @@ export class MembersService {
 
     const member = this.memberRepository.create(memberData);
 
-    member.memberStatus = await this.memberStatusService.findOne(
-      memberStatusId,
-    );
+    member.memberStatus =
+      await this.memberStatusService.findOne(memberStatusId);
 
     if (spouseId) {
       member.spouse = await this.findMember(spouseId, 'Spouse');
@@ -114,9 +113,8 @@ export class MembersService {
     Object.assign(member, memberData);
 
     if (memberStatusId) {
-      member.memberStatus = await this.memberStatusService.findOne(
-        memberStatusId,
-      );
+      member.memberStatus =
+        await this.memberStatusService.findOne(memberStatusId);
     }
 
     if (spouseId) {
