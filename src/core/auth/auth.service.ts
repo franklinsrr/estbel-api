@@ -1,4 +1,4 @@
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtVerifyOptions } from '@nestjs/jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AdminsService } from '@admins/admins.service';
 import { PasswordService } from '@shared/libs/password/password.service';
@@ -128,20 +128,14 @@ export class AuthService {
     oldAccessToken: string | undefined,
     oldRefreshToken: string | undefined,
   ): Promise<Tokens> {
-    const accessPayload = await this.verifyToken(oldAccessToken);
+    const accessPayload = await this.verifyToken(oldAccessToken, {
+      ignoreExpiration: true,
+    });
+
     const resfreshPayload = await this.verifyToken(oldRefreshToken);
 
     if (accessPayload.sub !== resfreshPayload.sub) {
       throw new UnauthorizedException('Invalid token');
-    }
-
-    const isRefreshExpired = this.isTokenExpired(
-      resfreshPayload.exp,
-      FIFTEEN_DAYS_IN_SECONDS,
-    );
-
-    if (isRefreshExpired) {
-      throw new UnauthorizedException('Refresh token expired');
     }
 
     const admin = await this.admisnService.findOne(accessPayload.sub);
@@ -162,13 +156,17 @@ export class AuthService {
    * @returns {Promise<Payload>} The payload of the token
    * @throws {UnauthorizedException} If the token is invalid
    */
-  async verifyToken(token: string): Promise<Payload> {
+  async verifyToken(
+    token: string,
+    options?: JwtVerifyOptions,
+  ): Promise<Payload> {
     if (!token) {
       throw new UnauthorizedException('Token is missing');
     }
 
     const payload = await this.jwtService.verifyAsync(token, {
       secret: this.configService.get<string>(ENV_VAR.JWT_SECRET),
+      ...options,
     });
 
     if (!payload || !payload.sub) {
